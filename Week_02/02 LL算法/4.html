@@ -1,0 +1,107 @@
+<!--
+ * @Description: LL语法分析 -1
+ * 实现 MultiplicativeExpression 表达式
+ * @Date: 2020-09-03 14:12:35
+-->
+<script>
+var regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g
+
+var dictionary = ["Number", "Whitespace", "LineTerminator", "*", "/", "+", "-"];
+
+function* tokenize(source) {
+    var result = null;
+    var lastIndex = 0;
+    do {
+        lastIndex = regexp.lastIndex;
+        result = regexp.exec(source);
+
+        // 两个break：没匹配出来，break；匹配出不认识的字符，bureak；
+        if(!result) 
+            break;
+
+        // 存储提取出的字符
+        let token = {
+            type:null,
+            value:null
+        }
+
+        for(var i = 1; i<= dictionary.length; i++) {
+            if(result[i])
+                // 类型信息，赋值到token中
+                token.type = dictionary[i-1];
+        }
+        // 数值信息，赋值到value中。
+        token.value = result[0];
+        // 返回一个token的序列
+        // console.log("token= " + token.type + token.value);  // 测试用
+        yield token;
+    } while(result);
+    // 最末尾添加一个结束符
+    yield {
+        type:"EOF"
+    }
+}
+
+let source = [];
+
+// 剔除多余的空格，回车等符号
+for(let token of tokenize("10 * 25 / 2")) {
+    if(token.type !== "Whitespace" && token.type !== "LineTerminator")
+        source.push(token);
+}
+
+function Expression(tokens) {
+
+}
+
+function AdditiveExpression(source) {
+
+}
+
+// 最近的终结符开始编写，乘法。
+// node非终结符，每个if递归。
+// 最终形成一个MultiplicativeExpression嵌套在另一个MultiplicativeExpression中的结构
+function MultiplicativeExpression(source) {
+    if (source[0].type === "Number") {
+        let node = {
+            type: "MultiplicativeExpression",
+            children: [source[0]]
+        }
+        source[0] = node;
+        return MultiplicativeExpression(source);
+    }
+    if(source[0].type === "MultiplicativeExpression" && source[1] && source[1].type === "*") {
+        let node = {
+            type: "MultiplicativeExpression",
+            operator:"*",
+            children: []
+        }
+        node.children.push(source.shift());
+        node.children.push(source.shift());
+        node.children.push(source.shift());
+        source.unshift(node);
+        return MultiplicativeExpression(source);
+    }
+    if(source[0].type === "MultiplicativeExpression" && source[1] && source[1].type === "/") {
+        let node = {
+            type:"MultiplicativeExpression",
+            operator: "/",
+            children: []
+        }
+        node.children.push(source.shift());
+        node.children.push(source.shift());
+        node.children.push(source.shift());
+        source.unshift(node);
+        return MultiplicativeExpression(source);
+    } 
+    // 递归结束的条件：
+    if(source[0].type === "MultiplicativeExpression") {
+        return source[0];
+    }
+    // 应该不会有执行到这里的情况，不会执行
+    return MultiplicativeExpression(source);
+}
+
+console.log(MultiplicativeExpression(source));
+
+</script>

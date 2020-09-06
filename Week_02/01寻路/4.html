@@ -1,0 +1,124 @@
+<!-- 处理路径问题 -->
+<style>
+    .cell {
+        display: inline-block;
+        line-height: 7px;
+        width: 6px;
+        height: 6px;
+        background-color: gray;
+        border-bottom: solid 1px white;
+        border-right: solid 1px white;
+        vertical-align: middle;
+    }
+
+    #container {
+        width: 701px;
+    }
+</style>
+<!-- 为了map和这里的childNode节点一一对应，所以不能有回车换行，否则对应会错位 -->
+
+<div id="container"></div>
+<button onclick="localStorage['map'] = JOSN.stringify(map)">save</button>
+
+<script>
+    let map = localStorage["map"] ? JOSN.parse(localStorage["map"]) : Array(1000).fill(0);
+
+    let container = document.getElementById("container");
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            let cell = document.createElement("div");
+            cell.classList.add("cell"); // 为元素添加一个class名
+
+            if (map[100 * y + x] == 1) {
+                cell.style.backgroundColor = "black"; //🀄️如果数组元素位置为1，表明已经画上线了，则背景色置为1.
+            }
+
+            cell.addEventListener("mousemove", () => {
+                if (mousedown) { // 判断是否按下，是执行刷新功能
+                    if (clear) { // 如果为1，则是左键 增加
+                        cell.style.backgroundColor = "";
+                        map[100 * y + x] = 0;
+                    } else { // 如果是0，则是右键 删除
+                        cell.style.backgroundColor = "black";
+                        map[100 * y + x] = 1;
+                    }
+                }
+            });
+            container.appendChild(cell); // 最后不要忘记添加到父元素中。
+        }
+    }
+    let mousedown = false;
+    let clear = false;
+
+    // 鼠标按下时，
+    document.addEventListener("mousedown", e => {
+        mousedown = true;
+        clear = (e.which === 3); // e.which为3，表明是鼠标右键单机。
+    });
+
+    // 鼠标松开时，
+    document.addEventListener("mouseup", () => mousedown = false);
+    document.addEventListener("contextmenu", e => e.preventDefault());
+
+
+    function sleep(t) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, t);
+        });
+    }
+
+    // 导入数据map、起点start、end结束。
+    // start和end都是一个数组，x y两个坐标
+    // 广度搜索优先，用队列：shift() + push()
+    async function findPath(map, start, end) {
+        let table = Object.create(map);       // table地图用于记录历史路径
+        // table是一个一维数组，但是每个数组中保存的是一个[x, y]两个坐标的小数组。
+        let queue = [start];        // 相当于一维数组，也相当于一个队列
+
+        // 插入新数据
+        async function insert(x, y, pre) {
+            if (x < 0 || x >= 100 || y < 0 || y >= 100)
+                return;
+            if (table[y * 100 + x]) // 用table即可判断，不再需要对map原始地图修改，来判断。
+                return;
+
+            // await sleep(1);
+            container.children[y * 100 + x].style.backgroundColor = "lightgreen";
+            table[y * 100 + x] = pre;
+            // 因为pre是一个一维数组[x, y]，也是一个对象。如果对象为null或undefined，表明这个点没有尚未走到过。
+            //map[y * 100 + x] = 2;  // 不需要用map来判断坐标是否已经走过了，用table就可以。
+            queue.push([x, y]);
+        }
+
+        while (queue.length) {
+            let [x, y] = queue.shift();
+            console.log(x, y);
+            if (x === end[0] && y === end[1]) { // 判断当前选择点是否达到终点
+                // 如果达到终点，则执行回溯。
+                let path = [];  // path是用来记录
+
+                while(x != start[0] || y != start[1]) {  // 把路径画出来
+                    path.push(map[y * 100 + x]);
+                    [x, y] = table[y * 100 + x]; // 解构赋值
+                    await sleep(30);
+                    container.children[y * 100 + x].style.backgroundColor = "purple";
+                }
+                return path;  // 执行成功，输出源头坐标。
+            }
+            // 想同步调用的函数，就用await
+            // await 把insert全部顺序放入异步队列中。
+            await insert(x - 1, y, [x, y]);
+            await insert(x, y - 1, [x, y]);
+            await insert(x + 1, y, [x, y]);
+            await insert(x, y + 1, [x, y]);
+
+            await insert(x - 1, y - 1, [x, y]);
+            await insert(x + 1, y - 1, [x, y]);
+            await insert(x - 1, y + 1, [x, y]);
+            await insert(x + 1, y + 1, [x, y]);
+        }
+        return path;  // path如果为null或undefined，在boolean看来都是false。则找不到路径
+                      // 此处应该是undefined，因为如果执行到这里，肯定寻路失败，不会执行到 let path这一行代码。
+                      // 这行代码是在寻路成功的if中执行的。
+    }
+</script>

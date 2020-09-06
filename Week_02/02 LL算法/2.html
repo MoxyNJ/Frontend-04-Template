@@ -1,0 +1,56 @@
+<!--
+ * @Description: LL词法分析
+ *               用generator实现异步操作，调用token
+ * @Date: 2020-09-02 15:44:05
+-->
+<script>
+var regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g
+
+var dictionary = ["Number", "Whitespace", "LineTerminator", "*", "/", "+", "-"];
+
+function* tokenize(source) {
+    var result = null;
+    var lastIndex = 0;
+    while(true) {
+        lastIndex = regexp.lastIndex;
+        result = regexp.exec(source);
+
+        // 两个break：没匹配出来，break；匹配出不认识的字符，bureak；
+        if(!result) 
+            break;
+        // regexp中，执行一次exec()后，前后两次lastIndex之差，应该等于result[0].length。
+        // 因为result[0]，保存的就是本次提取出来的、可匹配的数值。lastIndex应该根据数值做等长改变。
+        // 如果 后 - 前 > result[0].length，则证明字符串有regexp不可识别的格式，break返回。
+        if( regexp.lastIndex - lastIndex > result[0].length)
+            break;
+
+        // 存储提取出的字符
+        let token = {
+            type:null,
+            value:null
+        }
+
+        for(var i = 1; i<= dictionary.length; i++) {
+            if(result[i])
+                // 类型信息，赋值到token中
+                token.type = dictionary[i-1];
+        }
+        // 数值信息，赋值到value中。
+        token.value = result[0];
+        // 返回一个token的序列
+        // console.log("token= " + token.type + token.value);  // 测试用
+        yield token;
+    }
+    // 最末尾添加一个结束符
+    yield {
+        type:"EOF"
+    }
+}
+
+//很巧妙：yield执行后，返回token，然后while循环后面的语句会被放到异步队列中。下面的for循环会执行。
+// 用 for of 打印token数值
+for(let token1 of tokenize("1024 + 10 * 25")) {
+    // console.log(token1.value + token1.type);  // 测试用
+    console.log(token1);
+}
+</script>

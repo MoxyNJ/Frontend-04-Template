@@ -1,0 +1,159 @@
+<!-- 启发式寻路 - 02 -->
+<style>
+    .cell {
+        display: inline-block;
+        line-height: 7px;
+        width: 6px;
+        height: 6px;
+        background-color: gray;
+        border-bottom: solid 1px white;
+        border-right: solid 1px white;
+        vertical-align: middle;
+    }
+
+    #container {
+        width: 701px;
+    }  
+</style>
+
+
+<div id="container"></div>
+<button onclick="localStorage['map'] = JOSN.stringify(map)">save</button>
+
+<script>
+ 
+    class Sorted {
+   
+        constructor(data,end) {
+            this.data = data;
+            this.start = data;
+            this.end = end;
+        }
+
+        compare(a, b) {
+            return this.distance(a) - this.distance(b);
+        }
+
+        distance(point) {
+            return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2;
+        }
+
+        take(){
+            // 先判断出长度 > 0
+            if(!this.data.length)
+                return;
+            // 假定第一个最小
+            let min = this.data[0];
+            let minIndex = 0;
+  
+            for(let i = 1; i < this.data.length; i++){
+                if(this.compare(this.data[i], min) < 0) {
+                    min = this.data[i];
+                    minIndex = i;
+                }
+            }
+
+            this.data[minIndex] = this.data[this.data.length - 1];
+            this.data.pop();
+            return min;            
+        }
+    
+        give(v) {
+            this.data.push(v);
+        }
+    }
+
+    let map = localStorage["map"] ? JOSN.parse(localStorage["map"]) : Array(1000).fill(0);
+
+    let container = document.getElementById("container");
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            let cell = document.createElement("div");
+            cell.classList.add("cell"); 
+
+            if (map[100 * y + x] == 1) {
+                cell.style.backgroundColor = "black"; 
+            }
+
+            cell.addEventListener("mousemove", () => {
+                if (mousedown) { 
+                    if (clear) { 
+                        cell.style.backgroundColor = "";
+                        map[100 * y + x] = 0;
+                    } else { 
+                        cell.style.backgroundColor = "black";
+                        map[100 * y + x] = 1;
+                    }
+                }
+            });
+            container.appendChild(cell); 
+        }
+    }
+    let mousedown = false;
+    let clear = false;
+
+    // 鼠标按下时，
+    document.addEventListener("mousedown", e => {
+        mousedown = true;
+        clear = (e.which === 3); // e.which为3，表明是鼠标右键单机。
+    });
+
+    // 鼠标松开时，
+    document.addEventListener("mouseup", () => mousedown = false);
+    document.addEventListener("contextmenu", e => e.preventDefault());
+
+
+    function sleep(t) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, t);
+        });
+    }
+
+    function findPath(map, start, end) {
+        let table = Object.create(map);   
+       
+        let queue = new Sorted([start],[end]);
+
+        // 插入新数据
+        function insert(x, y, pre) {
+            if (x < 0 || x >= 100 || y < 0 || y >= 100)
+                return;
+            if (table[y * 100 + x]) // 用table即可判断，不再需要对map原始地图修改，来判断。
+                return;
+            
+            container.children[y * 100 + x].style.backgroundColor = "lightgreen";
+            table[y * 100 + x] = pre;
+         
+            queue.give([x, y]);
+        }
+
+        while (queue.data.length) {
+            let [x, y] = queue.take();
+            console.log(x, y);
+            if (x === end[0] && y === end[1]) { // 判断当前选择点是否达到终点
+                // 如果达到终点，则执行回溯。
+                let path = [];  // path是用来记录
+
+                while(x != start[0] || y != start[1]) {  // 把路径画出来
+                    path.push(map[y * 100 + x]);
+                    [x, y] = table[y * 100 + x]; // 解构赋值
+                    
+                    container.children[y * 100 + x].style.backgroundColor = "purple";
+                }
+                return path;  // 执行成功，输出源头坐标。
+            }
+
+            insert(x - 1, y, [x, y]);
+            insert(x, y - 1, [x, y]);
+            insert(x + 1, y, [x, y]);
+            insert(x, y + 1, [x, y]);
+
+            insert(x - 1, y - 1, [x, y]);
+            insert(x + 1, y - 1, [x, y]);
+            insert(x - 1, y + 1, [x, y]);
+            insert(x + 1, y + 1, [x, y]);
+        }
+        // return null;
+        return path;  
+    }
+</script>

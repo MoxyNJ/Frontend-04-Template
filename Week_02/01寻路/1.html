@@ -1,0 +1,96 @@
+<!--
+ * @Descripttion: 
+ * @version: 
+ * @Author: sueRimn
+ * @Date: 2020-09-01 00:06:53
+ * @LastEditors: sueRimn
+ * @LastEditTime: 2020-09-01 00:07:15
+-->
+<!-- 实现地图编辑器 -->
+<!-- 
+    新建一个元素需要四步：
+        1. 获取父元素信息：let conatiner = document.getElementById();
+        2. 新建一个子元素：let cell = document.createElement();
+        3. 为子元素添加class名：cell.classList.add();
+        4. 把子元素添加到父元素中：container.appendChild(cell); 
+ -->
+ 
+ <!-- 
+     遗漏：需要把以前没用到过的代码方法，都记录下来，注意看备注：🀄️
+     遗漏：没用到的代码，相关知识可以扩展记录一下。
+  -->
+
+  <style>
+    /* 🀄️这里为什么要用line-height + vertical-align:top; */
+    .cell {
+        display: inline-block;
+        line-height: 7px;   
+        width:6px;
+        height:6px;
+        background-color: gray;
+        border-bottom: solid 1px white;
+        border-right: solid 1px white;
+        vertical-align:middle;
+    }
+    #container{
+        width: 701px;
+    }
+</style>
+
+<div id="container"></div>
+<button onclick="localStorage['map'] = JOSN.stringify(map)">save</button>
+
+<script>
+    // 创建一个一维数组 Array[1000]，引用名map。
+    // 🀄️数组.fill(1); 快速把所有数组中所有元素都初始化为1
+    // 🀄️如果localStorage中的数据不为0，说明不是初始化，直接JSON.parse() ，把数据转化为JSON对象。
+    // 🀄️「问题」JSON.parse转化的对象是数组？？
+    let map = localStorage["map"] ? JOSN.parse(localStorage["map"]) : Array(1000).fill(0);
+
+    let container = document.getElementById("container");
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            let cell = document.createElement("div");
+            cell.classList.add("cell");  // 为元素添加一个class名
+
+            if(map[100*y + x] == 1){
+                cell.style.backgroundColor = "black";   //🀄️如果数组元素位置为1，表明已经画上线了，则背景色置为1.
+            }
+
+            // 该方法用来判断：1.是否是刷新（对地图要修改）；2.如果刷新，是左键(增加)还是右键(删除)？
+            // mousedown:1-鼠标按下；0-鼠标没按下
+            // clear:1-要右键清除；0-不清楚
+            cell.addEventListener("mousemove", () => {
+                if(mousedown1) {  // 判断是否按下，是执行刷新功能
+                    if(clear) {  // 如果为1，则是左键 增加
+                        cell.style.backgroundColor = "";
+                        map[100 * y + x] = 0;
+                    } else {     // 如果是0，则是右键 删除
+                        cell.style.backgroundColor = "black";
+                        map[100 * y + x] = 1;
+                    }
+                }
+            });
+            container.appendChild(cell);  // 最后不要忘记添加到父元素中。
+        }
+
+        let mousedown1 = false;
+        let clear = false;
+
+        // 鼠标按下时，
+        document.addEventListener("mousedown", e =>{
+            mousedown1 = true;
+            clear = (e.which === 3);  // e.which为3，表明是鼠标右键单机。
+        });
+
+        // 鼠标松开时，
+        document.addEventListener("mouseup", () => mousedown1 =  false );
+        document.addEventListener("contextmenu", e => e.preventDefault());
+
+        function path(map, start, end){
+
+        }
+
+
+    }
+</script>
