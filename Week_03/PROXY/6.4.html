@@ -1,0 +1,42 @@
+<!--
+ * @Description: DOM精确操作 - 基本拖拽 - 解决方块第二次移动的初始坐标问题
+ * @Date: 2020-09-10 20:42:44
+-->
+<!-- 
+    上一问题的解决：给方块的translate的数值应当是“移动前的坐标 + 变化量”，而不是“0 + 变化量”。
+    移动前的坐标信息：baseX baseY
+-->
+<div id="dragable" style="width:100px; height:100px; background-color:#FE007F;"></div>
+<script>
+    let dragable = document.getElementById("dragable");
+
+    // 设置一个全局变量，来保存方块移动前的坐标信息。
+    // 为什么使用全局变量？ 
+    //     原因：鼠标松开后，需要保存此时的方块位置信息。鼠标按下后，需要调用方块的位置信息。这两个函数都需要使用这个变量。
+    // 方块在每次移动后，新的坐标位置 = 移动前的位置 + 变化量。
+    let baseX = 0,
+        baseY = 0;
+
+    dragable.addEventListener("mousedown", function (event) {
+        // 保存鼠标刚刚按下时候的起始坐标信息
+        // 在transfrom移动方块的时候，减去鼠标的起始坐标即可解决。
+        let startX = event.clientX,
+            startY = event.clientY;
+
+        // 鼠标松开后，取消这两个监听
+        let up = (event) => {
+            // 鼠标松开后，需要把此时的方块位置信息更新。
+            baseX = baseX + event.clientX - startX;
+            baseY = baseY + event.clientY - startY;
+            document.removeEventListener("mousemove", move);
+            document.removeEventListener("mouseup", up);
+        };
+        let move = (event) => {
+            dragable.style.transform =
+                `translate(${baseX + event.clientX - startX}px, ${baseY + event.clientY - startY}px)`
+        }
+
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", up);
+    });
+</script>

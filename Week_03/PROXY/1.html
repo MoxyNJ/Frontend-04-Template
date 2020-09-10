@@ -1,0 +1,16 @@
+<!--
+ * @Description: Proxy基础用法 - 1
+ * @Date: 2020-09-09 14:19:40
+-->
+<script>
+    let object = {
+        a: 1,
+        b: 2
+    }
+
+    let po = new Proxy(object, {
+        set(obj, prop, val) {
+            console.log(obj, prop, val);
+        }
+    })
+</script>

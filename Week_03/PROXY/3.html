@@ -1,0 +1,68 @@
+<!--
+ * @Description: 模仿reactive实现原理（三）
+ * @Date: 2020-09-09 17:04:42
+-->
+<script>
+    // object作为key，去找reactivities
+    let callbacks = new Map();
+
+    let usedReactivties = [];
+
+    let object = {
+        a: 1,
+        b: 2
+    }
+
+    let po = reactive(object);
+
+    // 代替事件监听机制，可以监听对象上的一个属性
+    effet(() => {
+        // 调用 po.a
+        console.log(po.a);
+    });
+
+    function effet(callback) {
+        // 执行前，先清空
+        usedReactivties = [];
+        callback();
+        console.log(usedReactivties);
+
+        for (let reactivity of usedReactivties) {
+            if (!callbacks.has(reactivity[0])) {
+                // 最终保存：(对象，属性)。这里先存储对象
+                callbacks.set(reactivity[0], new Map());
+            }
+
+            if (!callbacks.get(reactivity[0]).has(reactivity[1])) {
+                // 最终保存：(对象，属性)。这里后存储属性
+                callbacks.get(reactivity[0]).set(reactivity[1], []);
+            }
+            callbacks.get(reactivity[0]).get(reactivity[1]).push(callback);
+        }
+
+    }
+
+    // 代理Object的get和set函数
+    function reactive(object) {
+        // Proxy(目标对象, 触发事件函数)
+        return new Proxy(object, {
+            //set(目标对象,key,value)
+            set(obj, prop, val) {
+                obj[prop] = val;
+                // 判断：如果有对象 + 有属性：
+                if (callbacks.get(obj))
+                    if (callbacks.get(obj).get(prop))
+                        for (let callback of callbacks.get(obj).get(prop)) {
+                            callback();
+                        }
+                return obj[prop];
+            },
+            //get(目标对象，key)
+            get(obj, prop) {
+                // 在执行获取目标对象key之前，把相关信息截取，保存到usedReactivties数组中。
+                usedReactivties.push([obj, prop]);
+                return obj[prop];
+            }
+        });
+    }
+</script>

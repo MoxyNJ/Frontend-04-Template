@@ -1,0 +1,91 @@
+<!--
+ * @Description: 字符串分析算法｜Wildcard
+ * @Date: 2020-09-09 13:16:30
+-->
+<script>
+    function find(source, pattern) {
+        // 寻找一共有pattern一共有几个*号
+        let starCount = 0;
+        for (let i = 0; i < pattern.length; i++) {
+            if (pattern[i] === "*")
+                starCount++;
+        }
+        // 如果没有任何一个*号，就两个字符串一一匹配即可。
+        if (starCount === 0) {
+            for (let i = 0; i < pattern.length; i++) {
+                if (pattern[i] !== source[i] && pattern[i] !== "?")
+                    return false;
+            }
+            return;
+        }
+        //         i：原字符串source。第一遍扫描source，使用与识别“*号”和划分子字符串时。
+        // lastIndex：原字符串source。source将要开始执行匹配的下标位置
+        let i = 0;
+        let lastIndex = 0;
+
+        // 匹配第一个*号前的字符，一一匹配。
+        for (i = 0; pattern[i] !== "*"; i++) {
+            if (pattern[i] !== source[i] && pattern[i] !== "?")
+                return false;
+        }
+        // 第一个*号之前的字符，source和pattern肯定是一一匹配的（相同下标位置的字符一定匹配）
+        // 所以lastIndex的下标此时等于 i
+        lastIndex = i;
+
+        // 先用 i 下标，遍历source，划分出一个子字符串；
+        // 然后 lastIndex赋值给reg.lastIndex属性。表明即将执行的，正则匹配的起始位置。
+        // 完成正则匹配后，把reg.lastIndex属性值赋值给lastIndex。完成一个子字符串的匹配。
+        //  i 和 lastIndex两个属性之间的差值，就是尚未执行匹配的字符。
+
+        // 循环每一段（*号把字符串区分成几个段，几个子字符串，分别分析）
+        // starCount - 1，不处理最后一个子字符串。
+        for (let p = 0; p < starCount - 1; p++) {
+            // 提取每一个子字符串
+            i++;
+            let subPattern = "";
+            while (pattern[i] !== "*") {
+                subPattern += pattern[i];
+                i++;
+            }
+            // 把subPattern中的❓问号，全部替换成正则表达式的语法（任意字符）
+            // \s指空白（空格、换行、tab锁进等）；\S指非空白 --> 两者相加等于所有字符，全集。
+            let reg = new RegExp(subPattern.replace(/\?/g, "[\\s\\S]"), "g")
+            // 把这个正则的表达式的；lastIndxt属性，改成lastIndex(source将要开始匹配的坐标)
+            // reg.lastIndex表明下一次执行exec(正则匹配)的时候，起始位置。
+            reg.lastIndex = lastIndex;
+
+            // 如果有❓问号，则reg.exec()返回null，不匹配。函数直接返回false。
+            if(!reg.exec(source))
+                return false;
+
+            console.log(reg.exec(source));
+
+            lastIndex = reg.lastIndex;
+        }
+
+        // 此处处理最后的那个子字符串的匹配。
+        // 从source的末尾开始，从后往前循环，直到“*”位置
+        // x 为输出末尾可以匹配的字符串
+        let x = "";
+        for (let j = 0; j <= source.length - lastIndex && pattern[pattern.length - j] !== "*"; j++) {
+            if (pattern[pattern.length - j] !== source[source.length - j] &&
+                pattern[pattern.length - j] !== "?")
+                return false;
+            if (pattern[pattern.length - j] !== undefined)
+                x  = pattern[pattern.length - j] + x;
+        }
+        console.log('"' + x + '"');
+        return true;
+
+    }
+    // find("abcabcabxaac","a*b*bx*c");
+    // ["b", index: 1, input: "abcabcabxaac", groups: undefined]
+    // ["bx", index: 7, input: "abcabcabxaac", groups: undefined]
+    // true
+
+    // find("abcabcabxaac","a*b*bx*aac");
+    // ["b", index: 1, input: "abcabcabxaac", groups: undefined]
+    // ["bx", index: 7, input: "abcabcabxaac", groups: undefined]
+    // "aac"
+    // true
+</script>

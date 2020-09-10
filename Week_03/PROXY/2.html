@@ -1,0 +1,44 @@
+<!--
+ * @Description: 模仿reactive实现原理（一 & 二）
+ * @Date: 2020-09-09 14:22:23
+-->
+<script>
+    let callbacks =[];
+
+    let object = {
+        a: 1,
+        b: 2
+    }
+
+    let po = reactive(object);
+
+    // 代替事件监听机制，可以监听对象上的一个属性
+    effet(() => {
+        console.log(po.a);
+    });
+
+
+    function effet(callback){
+        callbacks.push(callback);
+    }
+
+    // 代理Object的get和set函数
+    function reactive(object) {
+        // Proxy(目标对象, 触发事件函数)
+        return new Proxy(object, {
+            //set(目标对象,key,value)
+            set(obj, prop, val) {
+                obj[prop] = val;
+                for(let callback of callbacks) {
+                    callback();
+                }
+                return obj[prop];
+            },
+            //get(目标对象，key)
+            get(obj, prop) {
+                console.log(obj, prop);
+                return obj[prop];
+            }
+        });
+    }
+</script>

@@ -1,0 +1,37 @@
+<!--
+ * @Description: DOM精确操作 - 基本拖拽 - 骨架代码
+ * @Date: 2020-09-10 20:17:06
+-->
+<!-- 
+    拖段的现象发生：有可能是监听区域不对，不应该在被拖动的物体上监听，而是应当在面板（ducument）上监听 
+        在document上监听，会产生捕捉鼠标的效果，即使移出浏览器的范围，事件也能接收到。
+-->
+
+<div id="dragable" style="width:100px; height:100px; background-color:#FE007F;"></div>
+<script>
+    let dragable = document.getElementById("dragable");
+    // 事件监听，跟随鼠标移动。
+    // 需要在mousedown鼠标按下后，才监听mousemove,mouseup事件，原因是：
+    //     逻辑上：鼠标按下后，鼠标才移动，此时才需要监听鼠标移动。
+    //     性能上：鼠标不按下，不需要监听鼠标移动，否则执行监听泰国频繁。
+    
+    // 需要在document上监听，而不能在dragable上，原因是：
+    //     如果在dragable上监听，一旦鼠标移动过快，脱离了方块dragable区域后，有可能会发生拖断的现象。
+
+    // mouseEvent事件：鼠标操作就会触发的事件，记录鼠标触发事件时的所有属性。
+
+    dragable.addEventListener("mousedown", function (event) {
+        
+        // 鼠标松开后，取消这两个监听
+        let up = () => {
+            document.removeEventListener("mousemove", move);
+            document.removeEventListener("mouseup", up);
+        };
+        let move = (event) => {
+            console.log(event);
+        }
+
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", up);
+    });
+</script>

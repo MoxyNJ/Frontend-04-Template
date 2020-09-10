@@ -1,0 +1,115 @@
+<!--
+ * @Description: reactivity响应式对象 - 实现RGB三个参数的控制
+ * @Date: 2020-09-10 18:24:15
+-->
+<input id="r" type="range" min="0" max="255"/>
+<input id="g" type="range" min="0" max="255"/>
+<input id="b" type="range" min="0" max="255"/><input id="r" type="range" min="0" max="255"/>
+<input id="g" type="range" min="0" max="255"/>
+<input id="b" type="range" min="0" max="255"/>
+<div id="color" style="width: 100px; height: 100px;"></div>
+<script>
+// 🎨调色盘：MVVM经典案例
+
+    // object作为key，去找reactivities
+    let callbacks = new Map();
+
+    // 添加一个缓存，保存
+    let reactivties = new Map();
+
+    let usedReactivties = [];
+
+    let object = {
+        r: 1,
+        g: 1,
+        b: 1
+    }
+
+    let po = reactive(object);
+
+    // 单向绑定，从object数据到input
+    effet(() => {
+        // 如果po.r改变，input的值也在变。
+        document.getElementById("r").value = po.r; 
+    });
+    effet(() => {
+        document.getElementById("g").value = po.g;
+    });
+    effet(() => {
+        document.getElementById("b").value = po.b;    
+    });
+
+
+    // 双向绑定，从input到object数据
+    document.getElementById("r").addEventListener("input", (event) => {
+        po.r = event.target.value;
+    })
+    document.getElementById("g").addEventListener("input", (event) => {
+        po.g = event.target.value;
+    })
+    document.getElementById("b").addEventListener("input", (event) => {
+        po.b = event.target.value;
+    })
+
+    // 添加color的单向绑定
+    effet(() => {
+        document.getElementById("color").style.backgroundColor = `rgb(${po.r}, ${po.g}, ${po.b})`;    
+    });
+
+
+    function effet(callback) {
+        // 执行前，先清空
+        usedReactivties = [];
+        callback();
+        console.log(usedReactivties);
+
+        for (let reactivity of usedReactivties) {
+            if (!callbacks.has(reactivity[0])) {
+                // 最终保存：(对象，属性)。这里先存储对象
+                callbacks.set(reactivity[0], new Map());
+            }
+
+            if (!callbacks.get(reactivity[0]).has(reactivity[1])) {
+                // 最终保存：(对象，属性)。这里后存储属性
+                callbacks.get(reactivity[0]).set(reactivity[1], []);
+            }
+            callbacks.get(reactivity[0]).get(reactivity[1]).push(callback);
+        }
+
+    }
+
+    // 代理Object的get和set函数
+    function reactive(object) {
+        if(reactivties.has(object))
+            return reactivties.get(object);
+
+        // Proxy(目标对象, 触发事件函数)
+        let proxy = new Proxy(object, {
+            set(obj, prop, val) {
+                obj[prop] = val;
+                // 判断：如果有对象 + 有属性：
+                if (callbacks.get(obj))
+                    if (callbacks.get(obj).get(prop))
+                        for (let callback of callbacks.get(obj).get(prop)) {
+                            callback();
+                        }
+                return obj[prop];
+            },
+            get(obj, prop) {
+                // 在执行获取目标对象key之前，把相关信息截取，保存到usedReactivties数组中。
+                usedReactivties.push([obj, prop]);
+                
+                // 如果出现obj对象的属性，是一个对象。即：object.a.b。
+                // 就继续执行reactive()
+                if(typeof obj[prop] === "object")
+                    return reactive(obj[prop]);
+                
+                return obj[prop];
+            }
+        });
+
+        reactivties.set(object, proxy);    
+        return proxy;
+    }
+
+</script>

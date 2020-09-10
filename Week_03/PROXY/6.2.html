@@ -1,0 +1,29 @@
+<!--
+ * @Description: DOM精确操作 - 基本拖拽 - 让方块跟随移动
+ * @Date: 2020-09-10 20:39:27
+-->
+<!-- 
+    方块可以跟着鼠标移动，但是有一个问题：
+        在鼠标按下，拖动鼠标时，方块的左上角会附着在鼠标上。
+        原因：clientX和clientY，是根据鼠标的坐标定位的。所以鼠标的原点和方块的原点一直对应，而方块原点就是方块的左上角。
+ -->
+
+<div id="dragable" style="width:100px; height:100px; background-color:#FE007F;"></div>
+<script>
+    let dragable = document.getElementById("dragable");
+
+    dragable.addEventListener("mousedown", function (event) {
+
+        // 鼠标松开后，取消这两个监听
+        let up = () => {
+            document.removeEventListener("mousemove", move);
+            document.removeEventListener("mouseup", up);
+        };
+        let move = (event) => {
+            dragable.style.transform = `translate(${event.clientX}px, ${event.clientY}px)`
+        }
+
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", up);
+    });
+</script>
