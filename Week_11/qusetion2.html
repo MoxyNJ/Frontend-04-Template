@@ -1,0 +1,27 @@
+<!--
+ * 了解 DOM API 的方法
+ * 使用 Node API
+ * 正常解法
+-->
+<div id="a">
+    <span>1</span>
+    <p>2</p>
+    <a href="#">3</a>
+    <div>4</div>
+</div>
+
+<script>
+    let element = document.getElementById("a");
+
+    function reverseChildren(element) {
+        // 记录长度，ChildrenNodes 是一个 living collection
+        var l = element.childNodes.length;
+        // l 自减，第一次循环前，就会减1，变成 "childrenNodes.length - 1"
+        // 因为是一个 living collection，每次循环，把最末的元素移到最前即可。
+        while(l --> 0) {
+            element.appendChild(element.childNodes[l])
+        }
+    }
+
+    reverseChildren(element);
+</script>

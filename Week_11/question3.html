@@ -1,0 +1,31 @@
+<!--
+ * 使用 Range API
+ * 最终答案
+ * 只进行两次 DOM 操作：把节点拿下来（第一次），反转后，把节点放上去（第二次）
+ * 反转元素：在 fragment对象 中进行三次插入，提高性能。
+ * 因为直接在 DOM树中进行插入操作，每次DOM操作，都会进行一次重排，对性能造成影响。
+-->
+<div id="a">
+    <span>1</span>
+    <p>2</p>
+    <a>3</a>
+    <div>4</div>
+</div>
+
+<script>
+    let element = document.getElementById("a");
+
+    function reverseChildren(element) {
+        let range = new Range();
+        range.selectNodeContents(element);
+
+        let fragment = range.extractContents();
+        var l = fragment.childNodes.length;
+        while(l --> 0) {
+            fragment.appendChild(fragment.childNodes[l]);
+        }
+        element.appendChild(fragment);
+    }
+
+    reverseChildren(element);
+</script>
