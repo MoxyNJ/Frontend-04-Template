@@ -1,0 +1,54 @@
+<script src="./gesture.js"></script>
+<body oncontextmenu="event.preventDefault()"></body>
+<!-- <script type="module">
+    import {enableGesture} from "./gesture.js";
+    enableGesture(document.documentElement);
+
+    document.documentElement.addEventListener("tap", ()=> {
+        console.log("tap event trigger!");
+    });
+    document.documentElement.addEventListener("pan", (event)=> {
+        console.log("pan event trigger!", event.clientX, event.clientY);
+    });
+    document.documentElement.addEventListener("press", (event)=> {
+        console.log("press event trigger!", event.clientX, event.clientY);
+    });
+    document.documentElement.addEventListener("flick", (event)=> {
+        console.log("flick event trigger!", event.clientX, event.clientY);
+    });
+</script> -->
+
+<script>
+    enableGesture(document.documentElement);
+
+    document.documentElement.addEventListener("tap", ()=> {
+        console.log("tap event trigger!");
+    });
+    
+    document.documentElement.addEventListener("panStart", (event)=> {
+        console.log("pan start event trigger!", 
+        event.startX, event.startY, event.clientX, 
+        event.clientY, event.isVertical? "| Vertical |":"— Horizontal —");
+    });
+    document.documentElement.addEventListener("pan", (event)=> {
+        console.log("pan event trigger!", event.clientX, event.clientY);
+    });
+    document.documentElement.addEventListener("panEnd", (event)=> {
+        console.log("pan end event trigger!", 
+        event.startX, event.startY, event.clientX, 
+        event.clientY, event.isVertical? "| Vertical |":"— Horizontal —", event.isFlick);
+    });
+
+    document.documentElement.addEventListener("press", (event)=> {
+        console.log("press event trigger!");
+    });
+    document.documentElement.addEventListener("pressEnd", (event)=> {
+        console.log("press end event trigger!");
+    });
+
+    document.documentElement.addEventListener("flick", (event)=> {
+        console.log("flick event trigger!", 
+        event.startX, event.startY, event.clientX, 
+        event.clientY, event.isVertical? "| Vertical |":"— Horizontal —", event.velocity);
+    });
+</script>
